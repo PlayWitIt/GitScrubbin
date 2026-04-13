@@ -1,4 +1,4 @@
-# GitScrubbin — Git Safety Guardian
+# gscrub — Git Safety Guardian
 
 <p align="center">
   <strong>A safety-first Git "leak prevention system" that detects accidental sensitive file exposures and helps you scrub them safely.</strong>
@@ -8,9 +8,9 @@
 
 ## Overview
 
-GitScrubbin is your personal Git guardian. It scans your repository for accidentally committed sensitive files (env files, credentials, keys, tokens, secrets) and guides you through safely removing them from Git history.
+gscrub is your personal Git guardian. It scans your repository for accidentally committed sensitive files (env files, credentials, keys, tokens, secrets) and guides you through safely removing them from Git history.
 
-### Why GitScrubbin?
+### Why gscrub?
 
 - **Safety First** — Always creates a backup branch before any changes
 - **Guided Experience** — Walks you through the process step-by-step
@@ -32,149 +32,94 @@ pipx install git-filter-repo
 # or: pip install git-filter-repo
 ```
 
-### Install GitScrubbin
+### Install gscrub
 
 ```bash
 # From source
 pip install -e .
 
+# Or from PyPI (when published)
+pip install gscrub
+
 # Or build and install
 pip build .
-pip install dist/gitscrubbin-*.whl
+pip install dist/gscrub-*.whl
 ```
 
 ---
 
 ## Usage
 
-### Interactive Mode (Recommended)
+### Scan Your Repository
 
 ```bash
-gitscrubbin
+gscrub
 ```
 
-The tool will:
-1. Scan your repository for sensitive files
-2. Display a table with risk levels
-3. Let you select files to scrub via checkbox
-4. Show impact analysis
-5. Create a backup branch automatically
-6. Request explicit "SCRUB" confirmation
-7. Rewrite history safely
+This will:
+1. Scan all files ever committed to your repo (including deleted files)
+2. Categorize them by risk level
+3. Show you what's in your Git history
 
-### Non-Interactive Mode
+### Common Commands
 
 ```bash
-# Preview what would be scrubbed (dry run)
-gitscrubbin --files .env --dry-run
-
-# Scrub specific files (skip interactive selection)
-gitscrubbin --files .env,credentials.json --yes
-
-# Show all files (not just scrubbable)
-gitscrubbin --verbose
+gscrub              # Scan and show risky files
+gscrub -h           # Show help
+gscrub -v           # Verbose (show all files, not just risky)
+gscrub -f .env      # Scrub specific file(s)
+gscrub -n           # Dry run (preview only)
+gscrub -y           # Auto-confirm (skip confirmation)
 ```
 
 ---
 
-## Command Reference
+## Understanding Risk Levels
 
-| Option | Short | Description |
-|--------|-------|-------------|
-| `--files` | `-f` | Comma-separated list of files to scrub |
-| `--verbose` | `-v` | Show all files, not just scrubbable ones |
-| `--dry-run` | `-n` | Preview only, don't actually scrub |
-| `--yes` | `-y` | Skip confirmation prompt |
+| Level | What it means | Examples |
+|-------|--------------|----------|
+| CRITICAL | Definitely secret - MUST scrub | SSH keys, `.p12`, `.pfx` |
+| HIGH | Probably secret - SHOULD scrub | `.env`, credentials, tokens |
+| MEDIUM | Might be sensitive - you decide | config files, old code |
+| LOW | Not a security risk | node_modules, cache |
+
+### Understanding Status
+
+| Status | What it means |
+|--------|--------------|
+| tracked | File currently exists in your working directory |
+| deleted | Was committed, now removed - BUT still in Git history! |
 
 ---
 
-## Risk Levels
+## Example Workflow
 
-| Level | Description |
-|-------|-------------|
-| **CRITICAL** | Private keys, credentials, tokens, secrets |
-| **HIGH** | Env files, AWS credentials, OAuth secrets |
-| **MEDIUM** | Config files, SQL dumps, backups |
-| **LOW** | Temporary files, cache directories |
-| **SAFE** | Files that don't pose exposure risk |
+```bash
+# 1. See what files are in your history
+$ gscrub
+
+# 2. Preview what will happen (dry run)
+$ gscrub -f .env -n
+
+# 3. Actually scrub (creates backup branch first)
+$ gscrub -f .env -y
+
+# 4. Force push to remote
+$ git push --force --all
+$ git push --force --tags
+
+# 5. If something goes wrong, recover
+$ git checkout gscrub-backup-20240115-143022
+```
 
 ---
 
 ## Safety Features
 
-- **Backup Branch** — Automatically creates `gscrubbin-backup-TIMESTAMP` branch before any changes
-- **Clean Worktree Required** — Won't run with uncommitted changes
-- **Dry Run Support** — Preview impact before executing
-- **Explicit Confirmation** — Requires typing "SCRUB" to proceed
+- **Backup Branch** — Automatically creates `gscrub-backup-TIMESTAMP` before any changes
+- **Dry Run** — Preview with `-n` before actual scrub
 - **Impact Analysis** — Shows exactly how many commits will be affected
-
----
-
-## Detection Patterns
-
-GitScrubbin automatically detects:
-
-- Environment files (`.env`, `.env.*`)
-- SSH keys (`id_rsa`, `id_ed25519`, `*.pem`, `*.key`)
-- Credentials files (`credentials.json`, `credentials.xml`, `aws-credentials`)
-- API keys and tokens (`api_key`, `access_token`, `refresh_token`)
-- OAuth secrets (`client_secret`, `oauth`)
-- Databases (`*.sqlite`, `*.db`, `dump.sql`)
-- Backups and temp files (`*.bak`, `tmp/`, `temp/`, `cache/`)
-
----
-
-## Example
-
-```bash
-$ gitscrubbin
-
-╭────────────────────────────────────────────────────────╮
-│ GitScrubbin — Git Safety Guardian                       │
-│ Detect accidental exposures. Scrub safely. No regrets.╰────────────────────────────────────────────────────────╯
-
-Scanning repository...
-
-  Found 3 potential targets
-Analyzing risk...
-
-                    Scrubbable Targets                     
-┏━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━┓
-┃ File            ┃ Risk    ┃ Status          ┃ History ┃
-┡━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━┇━━━━━━━━━┩
-│ .env            │ HIGH    │ tracked        │ 2 commits│
-│ credentials.json│ CRITICAL│ tracked        │ 1 commits│
-│ config.yml      │ MEDIUM  │ deleted        │ 3 commits│
-└─────────────────┴─────────┴────────────────┴─────────┘
-
-? Select files to scrub (space to toggle, enter when done):
-[*] .env
-[*] credentials.json
-[ ] config.yml
-
-Files selected: 2
-Commits affected: 3
-⚠ This will rewrite Git history!
-
-Backup branch: gscrubbin-backup-20240115-143022
-
-? Type SCRUB to confirm: SCRUB
-
-🧼 Scrubbing...
-
-  1. .env
-  2. credentials.json
-
-✅ Scrub complete!
-
-Next Steps
-
-Force push to update remote:
-  git push --force --all
-  git push --force --tags
-
-Recovery: git checkout gscrubbin-backup-20240115-143022
-```
+- **Recovery** — Switch to backup branch to undo
 
 ---
 
@@ -188,7 +133,7 @@ pipx install git-filter-repo
 
 ### "Dirty worktree detected"
 
-Commit or stash your changes before running GitScrubbin:
+Commit or stash your changes first:
 
 ```bash
 git add .
@@ -199,10 +144,10 @@ git commit -m "WIP"
 
 ```bash
 # List backup branches
-git branch | grep gscrubbin-backup
+git branch | grep gscrub-backup
 
 # Switch to backup
-git checkout gscrubbin-backup-TIMESTAMP
+git checkout gscrub-backup-TIMESTAMP
 ```
 
 ---
@@ -228,10 +173,3 @@ mypy gscrub/
 ## License
 
 MIT — PlayWit Creations
-
----
-
-## Related
-
-- [git-filter-repo](https://github.com/newren/git-filter-repo) — The engine that powers history rewriting
-- [BFG Repo-Cleaner](https://rtyley.github.io/bfg-repo-cleaner/) — Java-based alternative
