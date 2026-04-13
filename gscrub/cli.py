@@ -27,6 +27,45 @@ def print_header():
     ))
 
 
+def print_help_panel():
+    console.print(Panel.fit(
+        "[bold]What GitScrubbin Does[/bold]\n\n"
+        "[cyan]1. SCAN[/cyan] — Finds all files ever committed to your repo\n"
+        "[cyan]2. ANALYZE[/cyan] — Checks each file for sensitive patterns\n"
+        "[cyan]3. SHOW[/cyan] — Displays risk levels and history depth\n"
+        "[cyan]4. SCRUB[/cyan] — Removes files from Git history permanently\n\n"
+        "[bold]Understanding the Output[/bold]\n\n"
+        "[yellow]Status: deleted[/yellow] = File was committed in the past but "
+        "has since been removed from your working directory. It still exists "
+        "in your Git history!\n\n"
+        "[yellow]Status: tracked[/yellow] = File currently exists in your working directory\n\n"
+        "[bold]Risk Levels[/bold]\n"
+        "  [red]CRITICAL[/red] = Private keys, credentials, tokens, secrets\n"
+        "  [yellow]HIGH[/yellow] = Env files, AWS keys, API tokens\n"
+        "  [blue]MEDIUM[/blue] = Config files, scripts, old code\n"
+        "  [green]LOW[/green] = Temp files, cache, builds\n\n"
+        "[bold]Common Commands[/bold]\n\n"
+        "  [cyan]gitscrubbin[reset]           # Interactive mode (shows all scrubbable files)\n"
+        "  [cyan]gitscrubbin -v[reset]          # Verbose (show all files, not just risky ones)\n"
+        "  [cyan]gitscrubbin -f .env[reset]     # Scrub specific file(s)\n"
+        "  [cyan]gitscrubbin -n[reset]          # Dry run (preview only)\n"
+        "  [cyan]gitscrubbin -y[reset]          # Auto-confirm (skip confirmation)\n"
+        "  [cyan]gitscrubbin --help[reset]       # Show this help\n\n"
+        "[bold]Example Workflow[/bold]\n\n"
+        "[dim]# 1. Scan and see what files are in history[dim]\n"
+        "$ gitscrubbin\n\n"
+        "[dim]# 2. Preview what will happen (dry run)[dim]\n"
+        "$ gitscrubbin -f .env -n\n\n"
+        "[dim]# 3. Actually scrub (creates backup branch first)[dim]\n"
+        "$ gitscrubbin -f .env -y\n\n"
+        "[dim]# 4. Force push to remote[dim]\n"
+        "$ git push --force --all\n"
+        "$ git push --force --tags",
+        title="[bold cyan]HELP[/bold cyan]",
+        border_style="cyan"
+    ))
+
+
 def print_target_table(results):
     table = Table(title="[bold]Scrubbable Targets[/bold]", expand=True)
     table.add_column("File", style="cyan")
@@ -107,7 +146,13 @@ def print_next_steps(backup):
 @click.option("-n", "--dry-run", is_flag=True, help="Preview only, don't scrub")
 @click.option("-y", "--yes", is_flag=True, help="Skip confirmation")
 @click.option("-f", "--files", default="", help="Files to scrub (comma-separated)")
-def main(verbose, dry_run, yes, files):
+@click.option("-h", "--help", "show_help", is_flag=True, help="Show help and exit")
+def main(verbose, dry_run, yes, files, show_help):
+    if show_help:
+        print_header()
+        print_help_panel()
+        raise SystemExit(0)
+    
     print_header()
     
     try:
