@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "gitscrubbin"
+name = "gscrub"
 version = "0.1.0"
 description = "Git Safety Guardian — Detect accidental exposures and scrub safely"
 readme = "README.md"
@@ -38,7 +38,6 @@ dev = [
 
 [project.scripts]
 gscrub = "gscrub.cli:main"
-gitscrubbin = "gscrub.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
