@@ -37,6 +37,7 @@ dev = [
 ]
 
 [project.scripts]
+gscrub = "gscrub.cli:main"
 gitscrubbin = "gscrub.cli:main"
 
 [tool.setuptools.packages.find]

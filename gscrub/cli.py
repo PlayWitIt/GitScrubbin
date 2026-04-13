@@ -21,7 +21,7 @@ def is_interactive() -> bool:
 
 def print_header():
     console.print(Panel.fit(
-        "[bold cyan]GitScrubbin — Git Safety Guardian[/bold cyan]\n"
+        "[bold cyan]gscrub — Git Safety Guardian[/bold cyan]\n"
         "[dim]Detect accidental exposures. Scrub safely. No regrets.[/dim]",
         border_style="cyan"
     ))
